@@ -16,6 +16,7 @@
 #define READ_BUF_SIZE 1024
 #define WRITE_BUF_SIZE 1024
 #define BUF_FLUSH -1
+#define INFO_INIT { 0 }
 
 /* for conver_number() */
 #define CONVERT_LOWERCASE	1
@@ -64,11 +65,11 @@ typedef struct liststr
  * @environ: custon modified copy of environ from LL env
  * @history: the history node
  * @alias: the alias node
- * @env_changed: on if environ was changed
+ * @env_swap: on if environ was changed
  * @status: the return status of the last exec'd command
  * @cmd_buf: address of pointerto cmd_buf, on if chaining
  * @cmd_buf_type: CMD_type ||, &&, ;
- * @readfd: the fd from which to read line input
+ * @readpd: the fd from which to read line input
  * @histcount: the history line number count
  */
 typedef struct passinfo
@@ -85,12 +86,12 @@ typedef struct passinfo
 	list_t *history;
 	list_t *alias;
 	char **environ;
-	int env_changed;
+	int env_swap;
 	int status;
 
 	char **cmd_buf;
 	int cmd_buf_type;
-	int readfd;
+	int readpd;
 	int histcount;
 } info_t;
 
@@ -112,7 +113,7 @@ typedef struct builtin
 /*task 0 */
 int _isdigit(int c);
 
-/*toem_shloop.c */
+/*shloop.c */
 int hsh(info_t *, char **);
 int find_builtin(info_t *);
 void find_cmd(info_t *);
@@ -155,11 +156,11 @@ char **strtwo2(char *, char);
 
 /* realloc.c */
 char *_memset(char *, char, unsigned int);
-void ffree(char **);
+void s_free(char **);
 void *_realloc(void *, unsigned int, unsigned int);
 
 /* memory.c */
-int bfree(void **);
+int _memfree(void **);
 
 /* _atoi.c */
 int inter_active(info_t *);
@@ -184,53 +185,55 @@ int _myhistory(info_t *);
 int _myalias(info_t *);
 
 /* toem_getline.c */
-ssize_t get_input(info_t *);
-int _getline(infor *, char **, size_t *);
-void sigintHandler(int);
+ssize_t get_input_buffer(info_t *);
+ssize_t getline_input(info_t *);
+ssize_t read_buffer(info_t *, size_t *, **);
+int _getline(info_t *, char **, size_t *);
+void sigintHandler(__attribute__((unused))int);
 
-/* toem_getlinfo.c */
-void clear_info(info_t *);
-void set_info(info_t *, char **);
-void free_info(info_t *, int);
+/* toem_getlininfo.c */
+void init_info_struct(info_t *);
+void init_set_info(info_t *, char **);
+void free_info_struct(info_t *, int);
 
 /* toem_getenv.c*/
-char **get_environ(info_t *);
-int _unsetenv(info_t *, char *)
-	int _setenv(info_t *, char *, char *);
+char **get_environ_info(info_t *);
+int get_unsetenv(info_t *, char *)
+int get_setenv(info_t *, char *, char *);
 
-	/* toem_environ.c */
-	char *_getenv(info_t *, const char *);
-	int _myenv(info_t *);
-	int _mysetenv(info_t *);
-	int _myunsetenv(info_t *);
-	int populate_env_list(info_t *);
+/* toem_environ.c */
+char *_getenv(info_t *, const char *);
+int _myenv(info_t *);
+int _mysetenv(info_t *);
+int _myunsetenv(info_t *);
+int populate_env_list(info_t *);
 
-	/* toem_history */
-	char *get_history_file(info_t *info);
-	int write_history(info_t *info);
-	int read_history(info_t *info);
-	int build_history_list(info_t *info, char *buf, int linecount);
-	int renumber_history(info_t *info);
+/* toem_history */
+char *checks_history_file(info_t *info);
+int create_history(info_t *info);
+int read_history_file(info_t *info);
+int list_history(info_t *, char *, int);
+int reassign_history(info_t *);
 
-	/* toem_lists.c */
-	list_t *add_node(list_t **, const char *, int);
-	list_t *add_node_end(list_t **, const char *, int);
-	size_t print_list_str(const list_t *);
-	int delete_node_at_index(list_t **, unsigned int);
-	void free_list(list_t **);
+/* toem_lists.c */
+list_t *add_node_start(list_t **, const char *, int);
+list_t *add_node_end(list_t **, const char *, int);
+size_t print_list(const list_t *);
+int delete_node_index(list_t **, unsigned int);
+void free_list_all(list_t **);
 
-	/* toem_lists1.c */
-	size list_len(const list_t *);
-	char **list_to_strings(list_t *);
-	size_t print_list(const list_t *);
-	list_t *node_starts_with(info_t *, char *, char *);
-	ssize_t get_node_index(list_t *, list_t *);
+/* toem_lists2.c */
+size list_length_linked(const list_t *);
+char **list_strings(list_t *);
+size_t print_list_all(const list_t *);
+list_t *node_pointer(info_t *, char , char);
+ssize_t get_node(list_t *, list_t *);
 
-	/* toem_vars.c */
-	int is_chain(info_t *, char *, size_t *);
-	void check_chain(info_t *, char *, size_t *, size_t, size_t);
-	int replace_alias(info_t *);
-	int replace_vars(info_t *);
-	int replace string(char **, char *);
+/* toem_vars.c */
+int is_chain(info_t *, char *, size_t *);
+void check_chain(info_t *, char *, size_t *, size_t, size_t);
+int replace_alias(info_t *);
+int replace_vars(info_t *);
+int replace string(char **, char *);
 
 #endif
