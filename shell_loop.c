@@ -1,156 +1,77 @@
-#include "shell.h"
+#include "header.h"
 
 /**
- * hsh - main shell loop
- * @info: the parameter & return info struct
- * @av: argument vector from main()
- * Return: 0 Success, 1 on error,
+ * without_comment - deletes comments from the input
+ *
+ * @in: input string
+ * Return: input without comments
  */
-int hsh(info_t *info, char **av)
+char *without_comment(char *in)
 {
-	ssize_t input_size = 0;
-	int builtin_ret = 0;
+	int i, up_to;
 
-	while (input_size != -1 && builtin_ret != -2)
+	up_to = 0;
+	for (i = 0; in[i]; i++)
 	{
-		clear_info(info);
-		if (inter_active(info))
-			_puts("$ ");
-		_eputchar(BUF_FLUSH);
-		input_size = get_input_buffer(info);
-		if (input_size != -1)
+		if (in[i] == '#')
 		{
-			set_info(info, av);
-			builtin_ret = find_builtin(info);
-			if (builtin_ret == -1)
-				find_cmd(info);
+			if (i == 0)
+			{
+				free(in);
+				return (NULL);
+			}
+
+			if (in[i - 1] == ' ' || in[i - 1] == '\t' || in[i - 1] == ';')
+				up_to = i;
 		}
-		else if (inter_active(info))
-			_putchar('\n');
-		free_info(info, 0);
 	}
-	 create_history(info);
-	 set_info(info, 1);
-	if (!is_interactive(info) && info->status)
-		exit(info->status);
-	if (builtin_ret == -2)
+
+	if (up_to != 0)
 	{
-		if (info->err_num == -1)
-			exit(info->status);
-		exit(info->err_num);
+		in = _realloc(in, i, up_to + 1);
+		in[up_to] = '\0';
 	}
-	return (builtin_ret);
+
+	return (in);
 }
 
 /**
- * find_builtin - finds a builtin command
- * @info: parameter & return info struct
- * Return: -1 if builtin not found
- * 0 if builtin executed successfully,
- * 1 if builtin  found but not  successful,
- * -2 if builtin singnals exit()
+ * shell_loop - Loop of shell
+ * @datash: data relevant (av, input, args)
+ *
+ * Return: no return.
  */
-int find_builtin(info_t *info)
+void shell_loop(data_shell *datash)
 {
-	int i;
-	builtin_table builtintbl[] = {
-		{"exit", _myexit},
-		{"env", _myenv},
-		{"help", _myhelp},
-		{"history", _myhistory},
-		{"setenv", _mysetenv},
-		{"unsetenv", _myunsetenv},
-		{"cd", _mycd},
-		{"alias", _myalias},
-		{NULL, NULL}
-	};
+	int loop, i_eof;
+	char *input;
 
-	for (i = 0; builtintbl[i].type; i++)
-		if (_strcmp(info->argv[0], builtintbl[i].type) == 0)
+	loop = 1;
+	while (loop == 1)
+	{
+		write(STDIN_FILENO, "^-^ ", 4);
+		input = read_line(&i_eof);
+		if (i_eof != -1)
 		{
-			info->line_count++;
-			built_in_ret = builtintbl[i].func(info);
-			break;
+			input = without_comment(input);
+			if (input == NULL)
+				continue;
+
+			if (check_syntax_error(datash, input) == 1)
+			{
+				datash->status = 2;
+				free(input);
+				continue;
+			}
+			input = rep_var(input, datash);
+			loop = split_commands(datash, input);
+			datash->counter += 1;
+			free(input);
 		}
-	return (built_in_ret);
-}
-
-/**
- * find_cmd - finds a command in PATH
- * @info: the parameter and return info struct
- */
-void find_cmd(info_t *info)
-{
-	char *path = NULL;
-	int i, m;
-
-	info->path = info->argv[0];
-	if (info->linecount_flag == 1)
-	{
-		info->line_count++;
-		info->linecount_flag = 0;
-	}
-	/*counter the number of arguments (excluding whitespace)*/
-	for (i = 0, m = 0; info->arg[i]; i++)
-		if (!_delim(info->arg[i], "\t\n"))
-			m++;
-	/*if thre are no argument, return immediately*/
-	if (!m)
-		return;
-
-	/*check if the command is in the path environment variable*/
-	path = find_path(info, _getenv(info, "PATH="), info->argv[0]);
-	if (path != NULL)
-	{
-		info->path = path;
-		fork_cmd(info);
-	}
-	else
-	{
-		if ((inter_active(info) || _getenv(info, "PATH=")
-					|| info->argv[0][0] == '/') && is_cmd(info, info->argv[0]))
-			fork_cmd(info);
-		else if (*(info->arg) != '\n')
+		else
 		{
-			info->status = 127;
-			print_error(info, "not found\n");
+			loop = 0;
+			free(input);
 		}
 	}
 }
-
-/**
- * fork_cmd - forks a exec thread to run cmd
- * @info: the parameter & return info struct
- * Return: void
- */
-void fork_cmd(info_t *info)
-{
-	pid_t child_pid = fork();
-
-	if (child_pid == -1)
-	{
-		perror("Error:");
-		return;
-	}
-	if (child_pid == 0)
-	{
-		if (execve(info->path, info->argv, get_environ_info(info)) == -1)
-		{
-			free_info(info, 1);
-			if (errno == EACCES)
-				exit(126);
-			exit(1);
-		}
-	}
-	else
-	{
-		wait(&(info->status));
-		if (WIFEXITED(info->status))
-		{
-			info->status = WEXITSTATUS(info->status);
-			if (info->status == 126)
-				print_error(info, "Permission denied\n");
-		}
-	}
-}
-

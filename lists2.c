@@ -1,116 +1,61 @@
-#include "shell.h"
-/**
- * list_length_linked - a program function that checks length of list
- * @t: pointer to node
- * Return: length of list
- */
-size_t list_length_linked(const list_t *t)
-{
-	size_t a = 0;
+#include "header.h"
 
-	for (; t; t = t->next)
+/**
+ * add_rvar_node - adds a variable at the end
+ * of a r_var list.
+ * @head: head of the linked list.
+ * @lvar: length of the variable.
+ * @val: value of the variable.
+ * @lval: length of the value.
+ * Return: address of the head.
+ */
+r_var *add_rvar_node(r_var **head, int lvar, char *val, int lval)
+{
+	r_var *new, *temp;
+
+	new = malloc(sizeof(r_var));
+	if (new == NULL)
+		return (NULL);
+
+	new->len_var = lvar;
+	new->val = val;
+	new->len_val = lval;
+
+	new->next = NULL;
+	temp = *head;
+
+	if (temp == NULL)
 	{
-		a++;
+		*head = new;
 	}
-	return (a);
-}
-/**
- * list_strings - a program function that lists strings
- * @head: pointer to node
- * Return: string
- */
-char **list_strings(list_t *head)
-{
-	char **st, *str;
-	list_t *node = head;
-	size_t a = list_length_linked(head), x;
-
-	if (!head || !a)
-		return (NULL);
-
-	st = malloc(sizeof(char *) * (a + 1));
-
-	if (st == NULL)
-		return (NULL);
-
-	a = 0;
-	while (node)
+	else
 	{
-		str = malloc(_strlen(node->str) + 1);
-		if (str == NULL)
+		while (temp->next != NULL)
+			temp = temp->next;
+		temp->next = new;
+	}
+
+	return (*head);
+}
+
+/**
+ * free_rvar_list - frees a r_var list
+ * @head: head of the linked list.
+ * Return: no return.
+ */
+void free_rvar_list(r_var **head)
+{
+	r_var *temp;
+	r_var *curr;
+
+	if (head != NULL)
+	{
+		curr = *head;
+		while ((temp = curr) != NULL)
 		{
-			x = 0;
-			while (x < a)
-			{
-				free(st[x]);
-				x++;
-			}
-			free(st);
-			return (NULL);
+			curr = curr->next;
+			free(temp);
 		}
-		str = _strcpy(str, node->str);
-		st[a] = str;
-		node = node->next;
-		a++;
+		*head = NULL;
 	}
-	st[a] = NULL;
-	return (st);
-}
-/**
- * print_list_all - a program function that prints a list
- * @t: pointer
- * Return: list
- */
-size_t print_list_all(const list_t *t)
-{
-	size_t a = 0;
-
-	for (; t != NULL; t = t->next)
-	{
-		_puts(convert_number(t->num, 10, 0));
-		_putchar(':');
-		_putchar(' ');
-		_puts(t->str ? t->str : "(nil)");
-		_puts("\n");
-		a++;
-	}
-	return (a);
-}
-/**
- * node_pointer - a program function that starts the node
- * @node: pointer to the head
- * @prev: matching string
- * @s: character input
- * Return: node or NULL
- */
-list_t *node_pointer(list_t *node, char prev, char s)
-{
-	char *b = NULL;
-
-	for (; node; node = node->next)
-	{
-		b = starts_with(node->str, prev);
-		if (b && ((s == -1) || (*b == s)))
-		{
-			return (node);
-		}
-		return (NULL);
-	}
-}
-/**
- * get_node - a program function that gets node
- * @head: start pointer
- * @node: pointer at start
- * Return: node
- */
-ssize_t get_node(list_t *node, list_t *head)
-{
-	size_t a = 0;
-
-	for (; head; head = head->next, a++)
-	{
-		if (head == node)
-			return (a);
-	}
-	return (-1);
 }
