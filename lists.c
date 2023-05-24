@@ -7,7 +7,7 @@
  * @count: number of node
  * Return: added node
  */
-list_t *add_node_start(list_t **head, int count, const char *str)
+list_t *add_node_start(list_t **head, const char *str, int num)
 {
 	list_t *current_head;
 
@@ -17,13 +17,15 @@ list_t *add_node_start(list_t **head, int count, const char *str)
 	if (!current_head)
 		return (NULL);
 	_memset((void *)current_head, 0, sizeof(list_t));
-	current_head->count = count;
+	current_head->num = num;
 	if (str)
 	{
 		current_head->str = _strdup(str);
 		if (!current_head->str)
+		{
 			free(current_head);
 			return (NULL);
+		}
 	}
 	current_head->next = *head;
 	*head = current_head;
@@ -37,7 +39,7 @@ list_t *add_node_start(list_t **head, int count, const char *str)
  * @count: number of input
  * Return: end node
  */
-list_t *add_node_end(list_t **head, int count, const char *str)
+list_t *add_node_end(list_t **head,  const char *str,  int count)
 {
 	list_t *node, *current_node;
 
@@ -78,7 +80,7 @@ size_t print_list(const list_t *t)
 
 	for (; t; t = t->next, a++)
 	{
-		_puts(t->str ? t->str : "(nil)";
+		_puts(t->str ? t->str : "(nil)");
 		_puts("\n");
 	}
 	return (a);
@@ -126,18 +128,19 @@ int delete_node_idx(list_t **head, unsigned int idx)
  */
 void free_list_all(list_t **head_node)
 {
-	if (!head_node || *head_node == NULL)
-		return;
+	list_t *node, node->next, *head;
 
-	list_t *node = *head_node;
+	if (!head_node || !*head_node)
+		return;
 
 	head = *head_node;
 
 	for (node = head; node != NULL; node = next_node)
 	{
-		next_node = node->next
+		next_node = node->next;
 		free(node->str);
 		free(node);
+		node = next_node;
 	}
 	*head_node = NULL;
 }

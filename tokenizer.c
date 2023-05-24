@@ -16,7 +16,7 @@ char **strtow(char *str, char *d)
 	if (!d)
 		d = " ";
 	for (i = 0; i < len; i++)
-		if (!is_delim(str[i], d) && (is_delim(str[i + 1], d) || str[i + 1]))
+		if (!_delim(str[i], d) && (_delim(str[i + 1], d) || str[i + 1]))
 			numWords++;
 
 	if (numWords == 0)
@@ -26,7 +26,7 @@ char **strtow(char *str, char *d)
 		return (NULL);
 	for (i = 0; i <= len; i++)
 	{
-		if (is_delim(str[i], d) || str[i] == '\0')
+		if (_delim(str[i], d) || str[i] == '\0')
 		{
 			if (i - startIndex > 0)
 			{
@@ -41,7 +41,6 @@ char **strtow(char *str, char *d)
 				}
 				memcpy(s[wordIndex], &str[startIndex], wl);
 				s[wordIndex][wl] = '\0';
-				wordIndex;
 			}
 			startIndex = i + 1;
 		}
@@ -59,22 +58,23 @@ char **strtow(char *str, char *d)
 char **strtow2(char *str, char d)
 {
 	int i, wordlen, wordIndex = 0, startIndex = 0, numWords = 0;
+	char **s;
 
 	if (str == NULL || str[0] == 0)
 		return (NULL);
 
-	for (i = 0; i < str.Length; i++)
+	for (i = 0; i < str[i] != '\0'; i++)
 	{
 		if ((str[i] != d && str[i + 1] == d) || str[i + 1] == d ||
-				(str[i] != d && i + 1 == str.Length))
+				(str[i] != d && !str[i + 1]))
 		{
 			numWords++;
 		}
 	}
 	if (numWords == 0)
 		return (NULL);
-	s = new string[numWords];
-	for (i = 0; i <= str.Length; i++)
+	s = malloc((1 + numWords) * sizeof(char *));
+	for (i = 0; i < numWords; i++)
 	{
 		if (str[i] == d || i == str.Length)
 		{

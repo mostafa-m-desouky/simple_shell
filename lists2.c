@@ -23,9 +23,9 @@ char **list_strings(list_t *head)
 {
 	char **st, *str;
 	list_t *node = head;
-	size_t a = list_length_linked (head), x;
+	size_t a = list_length_linked(head), x;
 
-	if (head == NULL || a == NULL)
+	if (!head || !a)
 		return (NULL);
 
 	st = malloc(sizeof(char *) * (a + 1));
@@ -67,10 +67,10 @@ size_t print_list_all(const list_t *t)
 
 	for (; t != NULL; t = t->next)
 	{
-		_puts(convert_number(t->count, 10, 0));
+		_puts(convert_number(t->num, 10, 0));
 		_putchar(':');
 		_putchar(' ');
-		_puts(t->str ? t->str : "(nil)";
+		_puts(t->str ? t->str : "(nil)");
 		_puts("\n");
 		a++;
 	}
@@ -83,13 +83,13 @@ size_t print_list_all(const list_t *t)
  * @s: character input
  * Return: node or NULL
  */
-list_t *node_pointer(char prev, char s, list_t *node)
+list_t *node_pointer(list_t *node, char prev, char s)
 {
 	char *b = NULL;
 
 	for (; node; node = node->next)
 	{
-		b = pointer(node->str, prev);
+		b = starts_with(node->str, prev);
 		if (b && ((s == -1) || (*b == s)))
 		{
 			return (node);

@@ -14,9 +14,11 @@ void init_info_struct(info_t *info)
  * @arr: array of arguements
  * Return: info
  */
-void init_set_info(char **arr, info_t *info)
+void init_set_info(info_t *info, char **arr)
 {
-	info->lname = arr[0];
+	int a = 0;
+
+	info->fname = arr[0];
 	if (info->arg)
 	{
 		info->argv = malloc(sizeof(char *) * 2);
@@ -25,7 +27,6 @@ void init_set_info(char **arr, info_t *info)
 			info->argv[0] = _strdup(info->arg);
 			info->argv[1] = NULL;
 		}
-		int a = 0;
 
 		while (info->argv && info->argv[a])
 		{
@@ -43,7 +44,7 @@ void init_set_info(char **arr, info_t *info)
  * @sfd: integer input
  * Return: freed info
  */
-void free_info_struct(int sfd, info_t *info)
+void free_info_struct(info_t *info, int sfd)
 {
 	s_free(info->argv);
 	info->argv = NULL;
@@ -55,9 +56,9 @@ void free_info_struct(int sfd, info_t *info)
 			free(info->arg);
 			info->arg = NULL;
 		}
-		free_list(&(info->env));
-		free_list(&(info->alias));
-		free_list(&(info->history));
+		free_list_all(&(info->env));
+		free_list_all(&(info->alias));
+		free_list_all(&(info->history));
 		s_free(info->environ);
 		info->environ = NULL;
 		_memfree((void **)info->cmd_buf);

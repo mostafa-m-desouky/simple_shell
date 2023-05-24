@@ -20,7 +20,7 @@ char **get_environ_info(info_t *info)
  * @temp: variable input character
  * Return: unset environment
  */
-int get_unsetenv(char *temp, info_t *info)
+int get_unsetenv(info_t *info, char *temp)
 {
 	list_t *node = info->env;
 	size_t a = 0;
@@ -28,12 +28,12 @@ int get_unsetenv(char *temp, info_t *info)
 
 	if (node == NULL || temp == NULL)
 		return (0);
-	for (a = 0; node != NULL; a++;)
+	for (a = 0; node != NULL; a++)
 	{
-		b = pointer(node->str, temp);
+		b = starts_with(node->str, temp);
 		if (b && *b == '=')
 		{
-			info->env_swap = delete_node_index(&(info->env), a);
+			info->env_swap = delete_node_idx(&(info->env), a);
 			node = info->env;
 			continue;
 		}
@@ -48,7 +48,7 @@ int get_unsetenv(char *temp, info_t *info)
  * @eval: environment value
  * Return: set environment variable
  */
-int get_setenv(char *temp, char *eval, info_t *info)
+int get_setenv(info_t *info, char *temp, char *eval)
 {
 	char *b, *buffer = NULL;
 	list_t *node;
@@ -75,7 +75,7 @@ int get_setenv(char *temp, char *eval, info_t *info)
 		node = node->next;
 	} while (node);
 
-	add_node_end(&(info->env), 0, buffer);
+	add_node_end(&(info->env), buffer, 0);
 	free(buffer);
 	info->env_swap = 1;
 	return (0);

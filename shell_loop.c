@@ -14,23 +14,23 @@ int hsh(info_t *info, char **av)
 	while (input_size != -1 && builtin_ret != -2)
 	{
 		clear_info(info);
-		if (is_interactive(info))
+		if (inter_active(info))
 			_puts("$ ");
 		_eputchar(BUF_FLUSH);
-		input_size = get_input(info);
+		input_size = get_input_buffer(info);
 		if (input_size != -1)
 		{
 			set_info(info, av);
 			builtin_ret = find_builtin(info);
-			if (buildin_ret == -1)
+			if (builtin_ret == -1)
 				find_cmd(info);
 		}
-		else if (is_interactive(info))
+		else if (inter_active(info))
 			_putchar('\n');
-		freeOinfo(info, 0);
+		free_info(info, 0);
 	}
-	write_history(info);
-	free_info(info, 1);
+	 create_history(info);
+	 set_info(info, 1);
 	if (!is_interactive(info) && info->status)
 		exit(info->status);
 	if (builtin_ret == -2)
@@ -52,7 +52,7 @@ int hsh(info_t *info, char **av)
  */
 int find_builtin(info_t *info)
 {
-	const char *name = info->argv[0];
+	int i;
 	builtin_table builtintbl[] = {
 		{"exit", _myexit},
 		{"env", _myenv},
@@ -61,7 +61,7 @@ int find_builtin(info_t *info)
 		{"setenv", _mysetenv},
 		{"unsetenv", _myunsetenv},
 		{"cd", _mycd},
-		{"alias", myalias},
+		{"alias", _myalias},
 		{NULL, NULL}
 	};
 
@@ -69,7 +69,7 @@ int find_builtin(info_t *info)
 		if (_strcmp(info->argv[0], builtintbl[i].type) == 0)
 		{
 			info->line_count++;
-			built_in_ret = buildintbl[i].func(info);
+			built_in_ret = builtintbl[i].func(info);
 			break;
 		}
 	return (built_in_ret);
@@ -87,15 +87,15 @@ void find_cmd(info_t *info)
 	info->path = info->argv[0];
 	if (info->linecount_flag == 1)
 	{
-		info->line - count++;
+		info->line_count++;
 		info->linecount_flag = 0;
 	}
 	/*counter the number of arguments (excluding whitespace)*/
 	for (i = 0, m = 0; info->arg[i]; i++)
-		if (!is_delim(info->arg[i], "\t\n"))
+		if (!_delim(info->arg[i], "\t\n"))
 			m++;
 	/*if thre are no argument, return immediately*/
-	if (m == 0)
+	if (!m)
 		return;
 
 	/*check if the command is in the path environment variable*/
@@ -107,7 +107,7 @@ void find_cmd(info_t *info)
 	}
 	else
 	{
-		if ((interactive(info) || _getenv(info, "PATH=")
+		if ((inter_active(info) || _getenv(info, "PATH=")
 					|| info->argv[0][0] == '/') && is_cmd(info, info->argv[0]))
 			fork_cmd(info);
 		else if (*(info->arg) != '\n')
@@ -134,7 +134,7 @@ void fork_cmd(info_t *info)
 	}
 	if (child_pid == 0)
 	{
-		if (execve(info->path, info->argv, get_environ(info)) == -1)
+		if (execve(info->path, info->argv, get_environ_info(info)) == -1)
 		{
 			free_info(info, 1);
 			if (errno == EACCES)

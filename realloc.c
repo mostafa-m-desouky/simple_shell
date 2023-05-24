@@ -51,16 +51,18 @@ void *_realloc(void *mptr, unsigned int prev_byte, unsigned int next_byte)
 {
 	char *b;
 
-	if (mptr == NULL)
+	if (!mptr)
 		return (malloc(next_byte));
-	if (next_byte == NULL)
+	if (!next_byte)
+	{
 		free(mptr);
 		return (NULL);
-	if (next_byte == prev_byte
+	}
+	if (next_byte == prev_byte)
 		return (mptr);
 
 	b = malloc(next_byte);
-	if (b == NULL)
+	if (!b)
 		return (NULL);
 
 	prev_byte = prev_byte < next_byte ? prev_byte : next_byte;

@@ -7,7 +7,7 @@
  *      constant function prototype.
  * Return: Always 0
  */
-int _myhistory(info *info)
+int _myhistory(info_t *info)
 {
 	print_list(info->history);
 	return (0);
@@ -30,8 +30,8 @@ int unset_alias(info_t *info, char *str)
 
 	c = *p;
 	*p = 0;
-	ret = delete_node_at_index(&(info->alias),
-			get_node_index(info->alias, node_starts_with(info->alias, str, -1)));
+	ret = delete_node_idx(&(info->alias),
+			get_node(info->alias, node_pointer(info->alias, str, -1)));
 	*p = c;
 	return (ret);
 }
@@ -72,7 +72,7 @@ int print_alias(list_t *node)
 			_putchar(*a);
 		_putchar('\'');
 		_puts(p + 1);
-		_Puts(" '\n");
+		_puts(" '\n");
 		return (0);
 	}
 	return (1);
@@ -106,7 +106,7 @@ int _myalias(info_t *info)
 		if (p)
 			set_alias(info, info->argv[i]);
 		else
-			print_alias(node_starts_with(info->alias, info->argv[i], '='));
+			print_alias(starts_with(info->alias, info->argv[i], '='));
 	}
 	return (0);
 }

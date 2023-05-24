@@ -6,31 +6,31 @@
  * @base: input address of base variable
  * Return: buffer
  */
-ssize input_buffer(info_t *info, size_t *base, char **buffer)
+ssize_t input_buffer(info_t *info, char **buffer, size_t *base)
 {
-	ssize base_p = 0;
-	ssize q = 0;
+	ssize_t base_p = 0;
+	ssize_t q = 0;
 
-	if (*base == NULL)
+	if (!*base)
 	{
 		free(*buffer);
 		*buffer = NULL;
 		signal(SIGINT, sigintHandler);
 #if USE_GETLINE
-	q = getline(buffer, &base_b, stdin);
+	q = getline(buffer, &base_p, stdin);
 #else
-	q = getline(buffer, &base_b, info);
+	q = _getline(info, buffer, &base_p);
 #endif
 	if (q > 0)
 	{
 		if ((*buffer)[q - 1] == '\n')
 		{
-			(*buffer)[q - 1] == '\0';
+			(*buffer)[q - 1] = '\0';
 			q--;
 		}
 		info->linecount_flag = 1;
 		remove_comments(*buffer);
-		list_history(*buffer, info, info->histcount++);
+		list_history(info, *buffer, info->histcount++);
 		{
 			*base = q;
 			info->cmd_buf = buffer;
@@ -52,7 +52,7 @@ ssize_t getline_input(info_t *info)
 	static size_t a, x, base;
 
 	_putchar(BUF_FLUSH);
-	q = input_buffer(&buffer, &base, info);
+	q = input_buffer(info, &buffer, &base);
 	if (q == -1)
 		return (-1);
 	if (base)
@@ -106,7 +106,7 @@ ssize_t read_buffer(info_t *info, size_t *a, char *buffer)
  * @leng: length of line
  * Return: line or NULL on error
  */
-int _getline(info_t *info, size_t *leng, char **ptr)
+int _getline(info_t *info, char **ptr, size_t *leng)
 {
 	char *b = NULL, *new_b = NULL, *s;
 	size_t m;
@@ -119,12 +119,12 @@ int _getline(info_t *info, size_t *leng, char **ptr)
 		c = *leng;
 	if (a == base)
 		a = base = 0;
-	q read_buffer(info, buffer, &base);
+	q = read_buffer(info, buffer, &base);
 	if (q == -1 || (q == 0 && base == 0))
 		return (-1);
 	s = _strchr(buffer + a, '\n');
 	m = s ? 1 + (unsigned int)(s - buffer) : base;
-	new_b = realloc(b, c, c ? c + m : m + 1);
+	new_b = _realloc(b, c, c ? c + m : m + 1);
 	if (new_b == NULL)
 		return (b ? free(b), -1 : -1);
 	if (c)

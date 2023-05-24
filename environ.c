@@ -66,9 +66,9 @@ int _myunsetenv(info_t *info)
 	}
 	for (index = 1; index <= info->argc; index++)
 	{
-		if (_unsetenv(info, info->argv[index]) != 0)
+		if (get_unsetenv(info, info->argv[index]) != 0)
 		{
-			_eputs(info, "Failed to unset environment variable: ");
+			_eputs("Failed to unset environment variable: ");
 			return (1);
 		}
 	}
