@@ -1,73 +1,132 @@
-#include "header.h"
+#include "shell.h"
+
+void sig_handler(int sngl);
+int func_exc(char **amgt, char **ourfront);
 
 /**
- * free_data - frees data structure
- *
- * @datash: data structure
- * Return: no return
+ * sig_handler - function to print "$"&new line.
+ * @sngl: sing var.
+ * amine mohamed and boukhriss
  */
-void free_data(data_shell *datash)
+void sig_handler(int sngl)
 {
-	unsigned int i;
+	char *newPrmpt = "\n$ ";
 
-	for (i = 0; datash->_environ[i]; i++)
-	{
-		free(datash->_environ[i]);
-	}
-
-	free(datash->_environ);
-	free(datash->pid);
+	(void)sngl;
+	signal(SIGINT, sig_handler);
+	write(STDIN_FILENO, newPrmpt, 3);
 }
 
 /**
- * set_data - Initialize data structure
- *
- * @datash: data structure
- * @av: argument vector
- * Return: no return
+ * func_exc - function to execute pid.
+ * @amgt: array of amgt.
+ * @ourfront: double ptr.
+ * Return: return an integer.
  */
-void set_data(data_shell *datash, char **av)
+int func_exc(char **amgt, char **ourfront)
 {
-	unsigned int i;
+	pid_t child_pid;
+	int status, flag = 0, ret = 0;
+	char *command = amgt[0];
 
-	datash->av = av;
-	datash->input = NULL;
-	datash->args = NULL;
-	datash->status = 0;
-	datash->counter = 1;
-
-	for (i = 0; environ[i]; i++)
-		;
-
-	datash->_environ = malloc(sizeof(char *) * (i + 1));
-
-	for (i = 0; environ[i]; i++)
+	if (command[0] != '/' && command[0] != '.')
 	{
-		datash->_environ[i] = _strdup(environ[i]);
+		flag = 1;
+		command = locate_funct(command);
 	}
 
-	datash->_environ[i] = NULL;
-	datash->pid = aux_itoa(getpid());
+	if (!command || (access(command, F_OK) == -1))
+	{
+		if (errno == EACCES)
+			ret = (func_createErr(amgt, 126));
+		else
+			ret = (func_createErr(amgt, 127));
+	}
+	else
+	{
+		child_pid = fork();
+		if (child_pid == -1)
+		{
+			if (flag)
+				free(command);
+			perror("Error child:");
+			return (1);
+		}
+		if (child_pid == 0)
+		{
+			execve(command, amgt, environ);
+			if (errno == EACCES)
+				ret = (func_createErr(amgt, 126));
+			fn_to_free_envir();
+			fn_to_free_arg(amgt, ourfront);
+			func_free_alsList(aliases);
+			_exit(ret);
+		}
+		else
+		{
+			wait(&status);
+			ret = WEXITSTATUS(status);
+		}
+	}
+	if (flag)
+		free(command);
+	return (ret);
 }
 
 /**
- * main - Entry point
- *
- * @ac: argument count
- * @av: argument vector
- *
- * Return: 0 on success.
+ * main - function to excute cmd.
+ * @argc: num of amgt.
+ * @argv: array of amgt.
+ * Return: return an integer.
  */
-int main(int ac, char **av)
+int main(int argc, char *argv[])
 {
-	data_shell datash;
-	(void) ac;
+	int ret = 0, retn;
+	int *exeRet = &retn;
+	char *prompt = "$ ", *new_line = "\n";
 
-	signal(SIGINT, get_sigint);
-	set_data(&datash, av);
-	shell_loop(&datash);
-	free_data(&datash);
-	if (datash.status < 0)
-		return (255);
-	return (datash.status);
+	name = argv[0];
+	hist = 1;
+	aliases = NULL;
+	signal(SIGINT, sig_handler);
+
+	*exeRet = 0;
+	environ = envir_fn_cp();
+	if (!environ)
+		exit(-100);
+
+	if (argc != 1)
+	{
+		ret = prFileCmd(argv[1], exeRet);
+		fn_to_free_envir();
+		func_free_alsList(aliases);
+		return (*exeRet);
+	}
+
+	if (!isatty(STDIN_FILENO))
+	{
+		while (ret != END_OF_FILE && ret != EXIT)
+			ret = arg_handler(exeRet);
+		fn_to_free_envir();
+		func_free_alsList(aliases);
+		return (*exeRet);
+	}
+
+	while (1)
+	{
+		write(STDOUT_FILENO, prompt, 2);
+		ret = arg_handler(exeRet);
+		if (ret == END_OF_FILE || ret == EXIT)
+		{
+			if (ret == END_OF_FILE)
+				write(STDOUT_FILENO, new_line, 1);
+			fn_to_free_envir();
+			func_free_alsList(aliases);
+			exit(*exeRet);
+		}
+	}
+
+	fn_to_free_envir();
+	func_free_alsList(aliases);
+	return (*exeRet);
 }
